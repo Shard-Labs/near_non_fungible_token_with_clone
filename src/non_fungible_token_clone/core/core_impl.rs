@@ -1,3 +1,4 @@
+use crate::non_fungible_token_clone::NonFungibleTokenClone;
 use near_contract_standards::non_fungible_token::core::NonFungibleTokenCore;
 use near_contract_standards::non_fungible_token::events::NftMint;
 use near_contract_standards::non_fungible_token::metadata::TokenMetadata;
@@ -7,6 +8,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, TreeMap};
 use near_sdk::{env, AccountId, IntoStorageKey, PromiseOrValue};
 
+/*
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct NonFungibleTokenClone {
     pub nft: NonFungibleToken,
@@ -140,3 +142,4 @@ impl NonFungibleTokenCore for NonFungibleTokenClone {
         })
     }
 }
+*/
