@@ -1,6 +1,5 @@
 mod core;
 
-mod macros;
+mod enumeration;
 
 pub use self::core::NonFungibleTokenClone;
-pub use macros::*;
