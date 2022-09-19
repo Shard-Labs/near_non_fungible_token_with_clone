@@ -125,12 +125,13 @@ impl NonFungibleTokenCore for NonFungibleTokenClone {
 
     fn nft_token(&self, token_id: TokenId) -> Option<Token> {
         let token = self.nft.nft_token(token_id.clone());
+        let clone_from = self.nft_clone_from_id.get(&token_id).unwrap();
         let metadata = self
             .nft
             .token_metadata_by_id
             .as_ref()
             .unwrap()
-            .get(&token_id);
+            .get(&clone_from);
         let unwrap_token = token.unwrap();
         Some(Token {
             token_id: unwrap_token.token_id,
