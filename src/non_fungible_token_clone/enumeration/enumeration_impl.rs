@@ -10,7 +10,11 @@ impl NonFungibleTokenClone {
     /// Helper function used by a enumerations methods
     /// Note: this method is not exposed publicly to end users
     fn enum_get_token(&self, owner_id: AccountId, token_id: TokenId) -> Token {
-        let clone_id = self.nft_clone_from_id.get(&token_id).unwrap();
+        // If token_id is not found within nft_clone_from_id it means token_id is a genesis token
+        let clone_id = self
+            .nft_clone_from_id
+            .get(&token_id)
+            .unwrap_or_else(|| token_id.clone());
 
         let metadata = self
             .nft
@@ -202,6 +206,15 @@ mod tests {
             );
         }
 
+        let tokens = contract.nft_tokens_for_owner(accounts(0), None, None);
+        assert_eq!(accounts(0), tokens[0].owner_id, "Owner must be Alice");
+
+        let token = contract.nft_token("1".to_string());
+        assert_eq!(accounts(0), token.unwrap().owner_id, "Owner must be Alice");
+
+        let token = contract.nft_token("2".to_string());
+        assert_eq!(accounts(1), token.unwrap().owner_id, "Owner must be Bob");
+
         let contract_enum: Box<dyn NonFungibleTokenEnumeration> =
             Box::new(contract) as Box<dyn NonFungibleTokenEnumeration>;
         assert!(
@@ -223,5 +236,34 @@ mod tests {
             bob_tokens_count
         );
         contract_enum.nft_supply_for_owner(accounts(1));
+    }
+
+    #[should_panic(expected = "Token does not exist")]
+    #[test]
+    fn test_token_not_found() {
+        let mut ctx = VMContextBuilder::new();
+        ctx.context.attached_deposit = 7000000000000000000000;
+        testing_env!(ctx.context);
+
+        #[derive(BorshStorageKey, BorshSerialize)]
+        pub enum StorageKey {
+            NonFungibleToken,
+            TokenMetadata,
+            Enumeration,
+            Approval,
+            OriginClone,
+            Clone,
+        }
+
+        let contract = NonFungibleTokenClone::new(
+            StorageKey::NonFungibleToken,
+            env::current_account_id(),
+            Some(StorageKey::TokenMetadata),
+            Some(StorageKey::Enumeration),
+            Some(StorageKey::Approval),
+            StorageKey::OriginClone,
+            StorageKey::Clone,
+        );
+        contract.nft_token("999".to_string());
     }
 }
