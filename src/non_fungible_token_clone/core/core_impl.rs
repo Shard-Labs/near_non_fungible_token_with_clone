@@ -52,7 +52,7 @@ impl NonFungibleTokenClone {
         token_owner_id: AccountId,
     ) -> Token {
         if self.nft.token_metadata_by_id.is_none() {
-            panic!("Clone from token id ")
+            panic!("Token metadata extension must be used to clone.")
         }
 
         let token = self.nft.internal_mint_with_refund(
@@ -124,15 +124,20 @@ impl NonFungibleTokenCore for NonFungibleTokenClone {
     }
 
     fn nft_token(&self, token_id: TokenId) -> Option<Token> {
-        let token = self.nft.nft_token(token_id.clone());
-        let clone_from = self.nft_clone_from_id.get(&token_id).unwrap();
+        let unwrap_token = self
+            .nft
+            .nft_token(token_id.clone())
+            .unwrap_or_else(|| env::panic_str("Token does not exist"));
+        let clone_from = self
+            .nft_clone_from_id
+            .get(&token_id)
+            .unwrap_or_else(|| token_id);
         let metadata = self
             .nft
             .token_metadata_by_id
             .as_ref()
-            .unwrap()
+            .unwrap_or_else(|| env::panic_str("Token not found within metadata"))
             .get(&clone_from);
-        let unwrap_token = token.unwrap();
         Some(Token {
             token_id: unwrap_token.token_id,
             owner_id: unwrap_token.owner_id,
