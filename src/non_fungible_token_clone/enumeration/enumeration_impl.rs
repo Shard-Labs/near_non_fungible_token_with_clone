@@ -238,7 +238,6 @@ mod tests {
         contract_enum.nft_supply_for_owner(accounts(1));
     }
 
-    #[should_panic(expected = "Token does not exist")]
     #[test]
     fn test_token_not_found() {
         let mut ctx = VMContextBuilder::new();
@@ -264,6 +263,77 @@ mod tests {
             StorageKey::OriginClone,
             StorageKey::Clone,
         );
-        contract.nft_token("999".to_string());
+        assert!(
+            contract.nft_token("999".to_string()) == None,
+            "Token should be None"
+        );
+    }
+
+    #[should_panic(expected = "The token to be cloned from the parent must have metadata.")]
+    #[test]
+    fn test_clone_from_another_clone() {
+        let mut ctx = VMContextBuilder::new();
+        ctx.context.attached_deposit = 7000000000000000000000;
+        testing_env!(ctx.context);
+
+        #[derive(BorshStorageKey, BorshSerialize)]
+        pub enum StorageKey {
+            NonFungibleToken,
+            TokenMetadata,
+            Enumeration,
+            Approval,
+            OriginClone,
+            Clone,
+        }
+
+        let mut contract = NonFungibleTokenClone::new(
+            StorageKey::NonFungibleToken,
+            env::current_account_id(),
+            Some(StorageKey::TokenMetadata),
+            Some(StorageKey::Enumeration),
+            Some(StorageKey::Approval),
+            StorageKey::OriginClone,
+            StorageKey::Clone,
+        );
+
+        assert!(
+            contract.nft_token("999".to_string()) == None,
+            "Token should be None"
+        );
+
+        let clone_from_id: TokenId = "1".into();
+        let parent_metadata: TokenMetadata = TokenMetadata {
+            title: Some("title".into()),
+            description: Some("description".into()),
+            media: None,
+            media_hash: None,
+            copies: None,
+            issued_at: None,
+            expires_at: None,
+            starts_at: None,
+            updated_at: None,
+            extra: None,
+            reference: None,
+            reference_hash: None,
+        };
+
+        contract.nft.internal_mint(
+            clone_from_id.clone(),
+            accounts(0),
+            Some(parent_metadata.clone()),
+        );
+
+        contract.internal_clone_mint(
+            "2".into(),
+            clone_from_id,
+            accounts(0)
+        );
+
+        // Clone from another clone
+        contract.internal_clone_mint(
+            "3".into(),
+            "2".into(),
+            accounts(0)
+        );
     }
 }
