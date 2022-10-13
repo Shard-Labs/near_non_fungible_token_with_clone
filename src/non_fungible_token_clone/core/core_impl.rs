@@ -55,6 +55,10 @@ impl NonFungibleTokenClone {
             panic!("Token metadata extension must be used to clone.")
         }
 
+        if self.nft.token_metadata_by_id.as_ref().unwrap().get(&clone_from_id).is_none() {
+            panic!("The token to be cloned from the parent must have metadata.")
+        }
+
         let token = self.nft.internal_mint_with_refund(
             token_id.clone(),
             token_owner_id,
