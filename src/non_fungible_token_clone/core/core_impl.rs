@@ -124,20 +124,26 @@ impl NonFungibleTokenCore for NonFungibleTokenClone {
     }
 
     fn nft_token(&self, token_id: TokenId) -> Option<Token> {
-        let unwrap_token = self
+        let token: Option<Token>= self
             .nft
-            .nft_token(token_id.clone())
-            .unwrap_or_else(|| env::panic_str("Token does not exist"));
+            .nft_token(token_id.clone());
+
+        if token.is_none() {
+            return None;
+        }
+
+        let unwrap_token = token.unwrap();
+
         let clone_from = self
             .nft_clone_from_id
             .get(&token_id)
             .unwrap_or_else(|| token_id);
+
         let metadata = self
             .nft
             .token_metadata_by_id
-            .as_ref()
-            .unwrap_or_else(|| env::panic_str("Token not found within metadata"))
-            .get(&clone_from);
+            .as_ref().unwrap().get(&clone_from);
+
         Some(Token {
             token_id: unwrap_token.token_id,
             owner_id: unwrap_token.owner_id,

@@ -238,7 +238,6 @@ mod tests {
         contract_enum.nft_supply_for_owner(accounts(1));
     }
 
-    #[should_panic(expected = "Token does not exist")]
     #[test]
     fn test_token_not_found() {
         let mut ctx = VMContextBuilder::new();
@@ -264,6 +263,6 @@ mod tests {
             StorageKey::OriginClone,
             StorageKey::Clone,
         );
-        contract.nft_token("999".to_string());
+        assert!(contract.nft_token("999".to_string()) == None, "Token should be None");
     }
 }
